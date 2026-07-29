@@ -1,0 +1,1078 @@
+/* =====================================================
+   MiniSIEM Professional UI v1.0
+   Developed by Ashwini
+===================================================== */
+
+/* =====================================================
+   CSS Variables (Light Theme)
+===================================================== */
+
+:root{
+
+    --bg-color:#f4f7fc;
+
+    --card-color:#ffffff;
+
+    --header-color:#1e3a8a;
+
+    --primary-color:#2563eb;
+
+    --secondary-color:#3b82f6;
+
+    --text-color:#1f2937;
+
+    --border-color:#d1d5db;
+
+    --table-hover:#eff6ff;
+
+    --shadow:0 8px 20px rgba(0,0,0,.12);
+
+    --radius:14px;
+
+}
+
+/* =====================================================
+   Automatic Dark Theme
+===================================================== */
+
+@media (prefers-color-scheme: dark){
+
+    :root{
+
+        --bg-color:#111827;
+
+        --card-color:#1f2937;
+
+        --header-color:#0f172a;
+
+        --primary-color:#3b82f6;
+
+        --secondary-color:#60a5fa;
+
+        --text-color:#f9fafb;
+
+        --border-color:#374151;
+
+        --table-hover:#334155;
+
+        --shadow:0 8px 20px rgba(0,0,0,.45);
+
+    }
+
+}
+
+/* =====================================================
+   Global Reset
+===================================================== */
+
+*{
+
+    margin:0;
+
+    padding:0;
+
+    box-sizing:border-box;
+
+}
+
+/* =====================================================
+   Body
+===================================================== */
+
+body{
+
+    background:var(--bg-color);
+
+    color:var(--text-color);
+
+    font-family:Segoe UI, Arial, Helvetica, sans-serif;
+
+    transition:all .3s ease;
+
+}
+
+/* =====================================================
+   Container
+===================================================== */
+
+.container{
+
+    width:92%;
+
+    max-width:1400px;
+
+    margin:35px auto;
+
+}
+/* =====================================================
+   Header
+===================================================== */
+
+.header{
+
+    background:var(--header-color);
+
+    color:white;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:18px 35px;
+
+    position:sticky;
+
+    top:0;
+
+    z-index:1000;
+
+    box-shadow:var(--shadow);
+
+}
+
+.header h1{
+
+    font-size:30px;
+
+    font-weight:700;
+
+    letter-spacing:1px;
+
+}
+
+/* =====================================================
+   Navigation
+===================================================== */
+
+nav{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+}
+
+nav a{
+
+    color:white;
+
+    text-decoration:none;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    padding:10px 18px;
+
+    border-radius:10px;
+
+    transition:all .3s ease;
+
+}
+
+nav a:hover{
+
+    background:rgba(255,255,255,.15);
+
+    transform:translateY(-2px);
+
+}
+
+/* Active Navigation Link */
+
+nav a.active{
+
+    background:white;
+
+    color:var(--header-color);
+
+}
+
+/* =====================================================
+   Responsive Header
+===================================================== */
+
+@media (max-width:900px){
+
+    .header{
+
+        flex-direction:column;
+
+        gap:18px;
+
+        text-align:center;
+
+    }
+
+    nav{
+
+        flex-wrap:wrap;
+
+        justify-content:center;
+
+    }
+
+}
+
+/* =====================================================
+   Dashboard Summary
+===================================================== */
+
+.summary{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+
+    gap:25px;
+
+    margin-bottom:30px;
+
+}
+
+/* =====================================================
+   Summary Cards
+===================================================== */
+
+.summary-card{
+
+    background:var(--card-color);
+
+    border-radius:16px;
+
+    padding:25px;
+
+    box-shadow:var(--shadow);
+
+    transition:all .3s ease;
+
+    position:relative;
+
+    overflow:hidden;
+
+    border-left:6px solid var(--primary-color);
+
+}
+
+.summary-card:hover{
+
+    transform:translateY(-8px);
+
+    box-shadow:0 15px 35px rgba(0,0,0,.20);
+
+}
+
+.summary-card h2{
+
+    font-size:18px;
+
+    color:var(--text-color);
+
+    margin-bottom:12px;
+
+}
+
+.summary-card h1{
+
+    font-size:40px;
+
+    font-weight:700;
+
+    color:var(--primary-color);
+
+}
+
+/* =====================================================
+   Individual Card Colors
+===================================================== */
+
+.logs{
+
+    border-left-color:#2563eb;
+
+}
+
+.alerts{
+
+    border-left-color:#ef4444;
+
+}
+
+.high{
+
+    border-left-color:#f59e0b;
+
+}
+
+.windows{
+
+    border-left-color:#22c55e;
+
+}
+
+.linux{
+
+    border-left-color:#8b5cf6;
+
+}
+
+/* =====================================================
+   Card Hover Glow
+===================================================== */
+
+.logs:hover{
+
+    box-shadow:0 15px 35px rgba(37,99,235,.35);
+
+}
+
+.alerts:hover{
+
+    box-shadow:0 15px 35px rgba(239,68,68,.35);
+
+}
+
+.high:hover{
+
+    box-shadow:0 15px 35px rgba(245,158,11,.35);
+
+}
+
+.windows:hover{
+
+    box-shadow:0 15px 35px rgba(34,197,94,.35);
+
+}
+
+.linux:hover{
+
+    box-shadow:0 15px 35px rgba(139,92,246,.35);
+
+}
+
+/* =====================================================
+   Cards
+===================================================== */
+
+.card{
+
+    background:var(--card-color);
+
+    border-radius:16px;
+
+    padding:25px;
+
+    margin-bottom:30px;
+
+    box-shadow:var(--shadow);
+
+    transition:all .3s ease;
+
+}
+
+.card:hover{
+
+    transform:translateY(-3px);
+
+}
+
+.card h2{
+
+    color:var(--text-color);
+
+    margin-bottom:20px;
+
+    font-size:24px;
+
+}
+
+.card h3{
+
+    color:var(--text-color);
+
+    margin-bottom:15px;
+
+}
+
+/* =====================================================
+   Tables
+===================================================== */
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    background:var(--card-color);
+
+    border-radius:14px;
+
+    overflow:hidden;
+
+}
+
+thead{
+
+    background:var(--primary-color);
+
+    color:white;
+
+}
+
+th{
+
+    padding:16px;
+
+    text-align:center;
+
+    font-size:15px;
+
+    font-weight:600;
+
+}
+
+td{
+
+    padding:14px;
+
+    text-align:center;
+
+    border-bottom:1px solid var(--border-color);
+
+    color:var(--text-color);
+
+}
+
+tbody tr{
+
+    transition:all .25s ease;
+
+}
+
+tbody tr:nth-child(even){
+
+    background:rgba(0,0,0,.02);
+
+}
+
+tbody tr:hover{
+
+    background:var(--table-hover);
+
+}
+
+/* =====================================================
+   Table Responsive
+===================================================== */
+
+.table-container{
+
+    overflow-x:auto;
+
+}
+
+/* =====================================================
+   Forms
+===================================================== */
+
+form{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:15px;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+}
+
+input,
+select,
+textarea{
+
+    padding:12px 15px;
+
+    border:1px solid var(--border-color);
+
+    border-radius:10px;
+
+    background:var(--card-color);
+
+    color:var(--text-color);
+
+    font-size:15px;
+
+    outline:none;
+
+    transition:.3s;
+
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+
+    border-color:var(--primary-color);
+
+    box-shadow:0 0 10px rgba(37,99,235,.20);
+
+}
+
+/* =====================================================
+   Buttons
+===================================================== */
+
+button{
+
+    background:var(--primary-color);
+
+    color:white;
+
+    border:none;
+
+    border-radius:10px;
+
+    padding:12px 22px;
+
+    cursor:pointer;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+button:hover{
+
+    transform:translateY(-2px);
+
+    background:var(--secondary-color);
+
+}
+
+/* =====================================================
+   Responsive Tables
+===================================================== */
+
+@media(max-width:768px){
+
+    table{
+
+        font-size:13px;
+
+    }
+
+    th,
+    td{
+
+        padding:10px;
+
+    }
+
+    form{
+
+        flex-direction:column;
+
+        align-items:stretch;
+
+    }
+
+    input,
+    button{
+
+        width:100%;
+
+    }
+
+}
+
+/* =====================================================
+   Footer
+===================================================== */
+
+.footer{
+
+    margin-top:40px;
+
+    padding:25px;
+
+    background:var(--header-color);
+
+    color:white;
+
+    text-align:center;
+
+    border-top:4px solid var(--primary-color);
+
+}
+
+.footer p{
+
+    margin:6px 0;
+
+    font-size:15px;
+
+}
+
+/* =====================================================
+   Status Badges
+===================================================== */
+
+.badge{
+
+    display:inline-block;
+
+    padding:6px 12px;
+
+    border-radius:20px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    color:white;
+
+}
+
+.badge-success{
+
+    background:#22c55e;
+
+}
+
+.badge-warning{
+
+    background:#f59e0b;
+
+}
+
+.badge-danger{
+
+    background:#ef4444;
+
+}
+
+.badge-info{
+
+    background:#2563eb;
+
+}
+
+/* =====================================================
+   Collector Status Cards
+===================================================== */
+
+.status-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+    gap:20px;
+
+    margin-top:20px;
+
+}
+
+.status-card{
+
+    background:var(--card-color);
+
+    border-radius:15px;
+
+    padding:20px;
+
+    text-align:center;
+
+    box-shadow:var(--shadow);
+
+    transition:all .3s ease;
+
+    border:1px solid var(--border-color);
+
+}
+
+.status-card:hover{
+
+    transform:translateY(-5px);
+
+    box-shadow:0 15px 30px rgba(0,0,0,.15);
+
+}
+
+.status-title{
+
+    font-size:16px;
+
+    font-weight:600;
+
+    color:var(--text-color);
+
+    margin-bottom:10px;
+
+}
+
+.status-value{
+
+    font-size:34px;
+
+    font-weight:bold;
+
+    color:var(--primary-color);
+
+}
+
+.status-online{
+
+    color:#22c55e;
+
+}
+
+.status-warning{
+
+    color:#f59e0b;
+
+}
+
+.status-offline{
+
+    color:#ef4444;
+
+}
+
+/* =====================================================
+   Chart Cards
+===================================================== */
+
+.chart-card{
+
+    background:var(--card-color);
+
+    border-radius:16px;
+
+    padding:25px;
+
+    margin-bottom:30px;
+
+    box-shadow:var(--shadow);
+
+    transition:all .3s ease;
+
+}
+
+.chart-card:hover{
+
+    transform:translateY(-5px);
+
+}
+
+.chart-card h2{
+
+    color:var(--text-color);
+
+    margin-bottom:20px;
+
+    font-size:22px;
+
+    font-weight:600;
+
+}
+
+canvas{
+
+    width:100% !important;
+
+    max-height:400px;
+
+}
+
+/* =====================================================
+   Alert Severity
+===================================================== */
+
+.severity-high{
+
+    color:#ef4444;
+
+    font-weight:bold;
+
+}
+
+.severity-medium{
+
+    color:#f59e0b;
+
+    font-weight:bold;
+
+}
+
+.severity-low{
+
+    color:#22c55e;
+
+    font-weight:bold;
+
+}
+
+/* =====================================================
+   Loading Animation
+===================================================== */
+
+.loading{
+
+    animation:pulse 1.5s infinite;
+
+}
+
+@keyframes pulse{
+
+    0%{
+
+        opacity:0.5;
+
+    }
+
+    50%{
+
+        opacity:1;
+
+    }
+
+    100%{
+
+        opacity:0.5;
+
+    }
+
+}
+
+/* =====================================================
+   Fade Animation
+===================================================== */
+
+.fade-in{
+
+    animation:fadeIn .5s ease;
+
+}
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(10px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+/* =====================================================
+   Mobile Responsive
+===================================================== */
+
+@media (max-width:992px){
+
+    .container{
+
+        width:95%;
+
+    }
+
+    .summary{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+}
+
+@media (max-width:768px){
+
+    .header{
+
+        flex-direction:column;
+
+        align-items:center;
+
+        text-align:center;
+
+        padding:20px;
+
+    }
+
+    nav{
+
+        flex-wrap:wrap;
+
+        justify-content:center;
+
+        margin-top:15px;
+
+    }
+
+    .summary{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .status-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    form{
+
+        flex-direction:column;
+
+        align-items:stretch;
+
+    }
+
+    input,
+    select,
+    button{
+
+        width:100%;
+
+    }
+
+}
+
+@media (max-width:576px){
+
+    .header h1{
+
+        font-size:24px;
+
+    }
+
+    th,
+    td{
+
+        padding:10px;
+
+        font-size:13px;
+
+    }
+
+    .summary-card h1{
+
+        font-size:30px;
+
+    }
+
+}
+
+/* =====================================================
+   Scrollbar
+===================================================== */
+
+::-webkit-scrollbar{
+
+    width:10px;
+
+}
+
+::-webkit-scrollbar-track{
+
+    background:var(--bg-color);
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:var(--primary-color);
+
+    border-radius:20px;
+
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+    background:var(--secondary-color);
+
+}
+
+/* =====================================================
+   Hover Effects
+===================================================== */
+
+.card,
+.summary-card,
+.chart-card,
+.status-card{
+
+    transition:all .3s ease;
+
+}
+
+.card:hover,
+.summary-card:hover,
+.chart-card:hover,
+.status-card:hover{
+
+    transform:translateY(-6px);
+
+}
+
+/* =====================================================
+   Utility Classes
+===================================================== */
+
+.text-center{
+
+    text-align:center;
+
+}
+
+.mt-20{
+
+    margin-top:20px;
+
+}
+
+.mb-20{
+
+    margin-bottom:20px;
+
+}
+
+.hidden{
+
+    display:none;
+
+}
+
+.shadow{
+
+    box-shadow:var(--shadow);
+
+}
+
+.rounded{
+
+    border-radius:var(--radius);
+
+}

@@ -1,0 +1,898 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ==========================================
+     Analytics Dashboard
+========================================== -->
+
+<div class="card fade-in">
+
+    <h1>📊 Security Analytics Dashboard</h1>
+
+    <p>
+
+        Monitor login activity, operating system distribution,
+        attack patterns, user activity, and security trends
+        collected by MiniSIEM in real time.
+
+    </p>
+
+</div>
+
+<!-- ==========================================
+     Summary Cards
+========================================== -->
+
+<div class="summary">
+
+    <div class="summary-card logs fade-in">
+
+        <h2>📄 Total Logs</h2>
+
+        <h1 id="total_logs">0</h1>
+
+    </div>
+
+    <div class="summary-card alerts fade-in">
+
+        <h2>🚨 Total Alerts</h2>
+
+        <h1 id="total_alerts">0</h1>
+
+    </div>
+
+    <div class="summary-card windows fade-in">
+
+        <h2>🪟 Windows Events</h2>
+
+        <h1 id="windows_logs">0</h1>
+
+    </div>
+
+    <div class="summary-card linux fade-in">
+
+        <h2>🐧 Linux Events</h2>
+
+        <h1 id="linux_logs">0</h1>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     Login Statistics
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>📊 Login Statistics</h2>
+
+    <p>
+
+        Displays successful and failed login attempts collected
+        from Windows and Linux systems.
+
+    </p>
+
+    <div class="chart-container">
+
+        <canvas id="barChart"></canvas>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     Login Distribution
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>🥧 Login Distribution</h2>
+
+    <p>
+
+        Percentage of successful and failed login attempts.
+
+    </p>
+
+    <div class="chart-container">
+
+        <canvas id="pieChart"></canvas>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     Operating System Distribution
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>🖥️ Operating System Distribution</h2>
+
+    <p>
+
+        Comparison of Windows and Linux security events.
+
+    </p>
+
+    <div class="chart-container">
+
+        <canvas id="osChart"></canvas>
+
+    </div>
+
+</div>
+<!-- ==========================================
+     Event Statistics
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>📋 Event Statistics</h2>
+
+    <p>
+
+        Summary of all security events detected by MiniSIEM.
+
+    </p>
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Event Type</th>
+
+                    <th>Total Events</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="event_stats">
+
+                <tr>
+
+                    <td colspan="2">
+
+                        Loading...
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     Top Attacker IPs
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>🌍 Top Attacker IP Addresses</h2>
+
+    <p>
+
+        IP addresses responsible for the highest number of failed login attempts.
+
+    </p>
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>IP Address</th>
+
+                    <th>Attempts</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="top_attackers">
+
+                <tr>
+
+                    <td colspan="2">
+
+                        Loading...
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     Alert Severity
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>🚨 Alert Severity</h2>
+
+    <p>
+
+        Security alerts grouped by severity level.
+
+    </p>
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Severity</th>
+
+                    <th>Total Alerts</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="alert_severity">
+
+                <tr>
+
+                    <td colspan="2">
+
+                        Loading...
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     Top Targeted Users
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>👤 Top Targeted Users</h2>
+
+    <p>
+
+        User accounts generating the highest number of security events.
+
+    </p>
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Username</th>
+
+                    <th>Events</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="top_users">
+
+                <tr>
+
+                    <td colspan="2">
+
+                        Loading...
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     Login Timeline
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>📈 Login Activity Timeline</h2>
+
+    <p>
+
+        Hourly login activity collected from all monitored systems.
+
+    </p>
+
+    <div class="chart-container">
+
+        <canvas id="timelineChart"></canvas>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     Analytics Information
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>ℹ️ Analytics Information</h2>
+
+    <p>
+
+        This dashboard provides a real-time overview of MiniSIEM activity,
+        including login attempts, operating system distribution,
+        alert severity, top attacker IPs, targeted users,
+        and event trends.
+
+    </p>
+
+</div>
+<script>
+
+// ==========================================
+// Chart Variables
+// ==========================================
+
+let barChart;
+let pieChart;
+let osChart;
+let timelineChart;
+
+// ==========================================
+// Initialize Charts
+// ==========================================
+
+function initializeCharts(){
+
+    // ---------------------------
+    // Login Statistics
+    // ---------------------------
+
+    const barCtx = document.getElementById("barChart").getContext("2d");
+
+    barChart = new Chart(barCtx,{
+
+        type:"bar",
+
+        data:{
+
+            labels:[
+                "Success",
+                "Failed"
+            ],
+
+            datasets:[{
+
+                label:"Login Attempts",
+
+                data:[0,0],
+
+                backgroundColor:[
+                    "#22c55e",
+                    "#ef4444"
+                ],
+
+                borderRadius:8
+
+            }]
+
+        },
+
+        options:{
+
+            responsive:true,
+
+            maintainAspectRatio:false,
+
+            animation:true,
+
+            plugins:{
+
+                legend:{
+                    display:false
+                }
+
+            },
+
+            scales:{
+
+                y:{
+                    beginAtZero:true
+                }
+
+            }
+
+        }
+
+    });
+
+    // ---------------------------
+    // Pie Chart
+    // ---------------------------
+
+    const pieCtx = document.getElementById("pieChart").getContext("2d");
+
+    pieChart = new Chart(pieCtx,{
+
+        type:"pie",
+
+        data:{
+
+            labels:[
+                "Success",
+                "Failed"
+            ],
+
+            datasets:[{
+
+                data:[0,0],
+
+                backgroundColor:[
+                    "#22c55e",
+                    "#ef4444"
+                ],
+
+                hoverOffset:20
+
+            }]
+
+        },
+
+        options:{
+
+            responsive:true,
+
+            maintainAspectRatio:false,
+
+            animation:true
+
+        }
+
+    });
+
+    // ---------------------------
+    // Operating System
+    // ---------------------------
+
+    const osCtx=document.getElementById("osChart").getContext("2d");
+
+    osChart=new Chart(osCtx,{
+
+        type:"doughnut",
+
+        data:{
+
+            labels:[
+                "Windows",
+                "Linux"
+            ],
+
+            datasets:[{
+
+                data:[0,0],
+
+                backgroundColor:[
+                    "#2563eb",
+                    "#8b5cf6"
+                ]
+
+            }]
+
+        },
+
+        options:{
+
+            responsive:true,
+
+            maintainAspectRatio:false,
+
+            cutout:"60%"
+
+        }
+
+    });
+
+    // ---------------------------
+    // Timeline
+    // ---------------------------
+
+    const timeCtx=document.getElementById("timelineChart").getContext("2d");
+
+    timelineChart=new Chart(timeCtx,{
+
+        type:"line",
+
+        data:{
+
+            labels:[],
+
+            datasets:[{
+
+                label:"Events",
+
+                data:[],
+
+                borderColor:"#2563eb",
+
+                backgroundColor:"rgba(37,99,235,.15)",
+
+                fill:true,
+
+                tension:.4
+
+            }]
+
+        },
+
+        options:{
+
+            responsive:true,
+
+            maintainAspectRatio:false,
+
+            scales:{
+
+                y:{
+                    beginAtZero:true
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+initializeCharts();
+// ==========================================
+// Live Analytics Refresh
+// ==========================================
+
+async function refreshAnalytics(){
+
+    try{
+
+        const response = await fetch("/api/analytics");
+
+        const data = await response.json();
+
+        // ----------------------------------
+        // Summary Cards
+        // ----------------------------------
+
+        document.getElementById("total_logs").innerText =
+            data.total_logs;
+
+        document.getElementById("total_alerts").innerText =
+            data.total_alerts;
+
+        document.getElementById("windows_logs").innerText =
+            data.windows_events;
+
+        document.getElementById("linux_logs").innerText =
+            data.linux_events;
+
+        // ----------------------------------
+        // Login Statistics
+        // ----------------------------------
+
+        barChart.data.datasets[0].data = [
+
+            data.login_success,
+
+            data.login_failed
+
+        ];
+
+        barChart.update();
+
+        // ----------------------------------
+        // Pie Chart
+        // ----------------------------------
+
+        pieChart.data.datasets[0].data = [
+
+            data.login_success,
+
+            data.login_failed
+
+        ];
+
+        pieChart.update();
+
+        // ----------------------------------
+        // Operating System
+        // ----------------------------------
+
+        osChart.data.datasets[0].data = [
+
+            data.windows_events,
+
+            data.linux_events
+
+        ];
+
+        osChart.update();
+
+        // ----------------------------------
+        // Timeline
+        // ----------------------------------
+
+        timelineChart.data.labels = [];
+
+        timelineChart.data.datasets[0].data = [];
+
+        data.timeline.forEach(function(item){
+
+            timelineChart.data.labels.push(item.hour + ":00");
+
+            timelineChart.data.datasets[0].data.push(item.total);
+
+        });
+
+        timelineChart.update();
+
+        // ----------------------------------
+        // Event Statistics
+        // ----------------------------------
+
+        let eventTable = document.getElementById("event_stats");
+
+        eventTable.innerHTML = "";
+
+        data.event_stats.forEach(function(event){
+
+            eventTable.innerHTML += `
+
+            <tr>
+
+                <td>${event.event}</td>
+
+                <td>${event.count}</td>
+
+            </tr>
+
+            `;
+
+        });
+
+        // ----------------------------------
+        // Top Attackers
+        // ----------------------------------
+
+        let attackerTable = document.getElementById("top_attackers");
+
+        attackerTable.innerHTML = "";
+
+        data.top_ips.forEach(function(ip){
+
+            attackerTable.innerHTML += `
+
+            <tr>
+
+                <td>${ip.ip}</td>
+
+                <td>${ip.attempts}</td>
+
+            </tr>
+
+            `;
+
+        });
+
+        // ----------------------------------
+        // Alert Severity
+        // ----------------------------------
+
+        let severityTable = document.getElementById("alert_severity");
+
+        severityTable.innerHTML = "";
+
+        severityTable.innerHTML += `
+
+        <tr>
+
+            <td>
+
+                <span class="badge badge-danger">
+
+                    HIGH
+
+                </span>
+
+            </td>
+
+            <td>${data.high_alerts}</td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                <span class="badge badge-warning">
+
+                    MEDIUM
+
+                </span>
+
+            </td>
+
+            <td>${data.medium_alerts}</td>
+
+        </tr>
+
+        <tr>
+
+            <td>
+
+                <span class="badge badge-success">
+
+                    LOW
+
+                </span>
+
+            </td>
+
+            <td>${data.low_alerts}</td>
+
+        </tr>
+
+        `;
+
+        // ----------------------------------
+        // Top Users
+        // ----------------------------------
+
+        let userTable = document.getElementById("top_users");
+
+        userTable.innerHTML = "";
+
+        data.top_users.forEach(function(user){
+
+            userTable.innerHTML += `
+
+            <tr>
+
+                <td>${user.username}</td>
+
+                <td>${user.attempts}</td>
+
+            </tr>
+
+            `;
+
+        });
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+    }
+
+}
+
+refreshAnalytics();
+// ==========================================
+// Auto Refresh
+// ==========================================
+
+setInterval(function(){
+
+    refreshAnalytics();
+
+},5000);
+
+// ==========================================
+// Page Visibility Refresh
+// ==========================================
+
+document.addEventListener("visibilitychange",function(){
+
+    if(!document.hidden){
+
+        refreshAnalytics();
+
+    }
+
+});
+
+// ==========================================
+// Window Focus Refresh
+// ==========================================
+
+window.addEventListener("focus",function(){
+
+    refreshAnalytics();
+
+});
+
+// ==========================================
+// Resize Charts
+// ==========================================
+
+window.addEventListener("resize",function(){
+
+    if(barChart) barChart.resize();
+
+    if(pieChart) pieChart.resize();
+
+    if(osChart) osChart.resize();
+
+    if(timelineChart) timelineChart.resize();
+
+});
+
+// ==========================================
+// Loading Animation
+// ==========================================
+
+document.querySelectorAll(".card").forEach(function(card){
+
+    card.classList.add("fade-in");
+
+});
+
+// ==========================================
+// Console Message
+// ==========================================
+
+console.log("======================================");
+
+console.log("MiniSIEM Professional Analytics Loaded");
+
+console.log("Live Dashboard Enabled");
+
+console.log("Auto Refresh : 5 Seconds");
+
+console.log("======================================");
+
+// ==========================================
+// End of Analytics Script
+// ==========================================
+
+</script>
+
+{% endblock %}

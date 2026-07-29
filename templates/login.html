@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card" style="max-width:500px; margin:60px auto;">
+
+    <h1 style="text-align:center;">
+        🛡️ MiniSIEM
+    </h1>
+
+    <p style="text-align:center;">
+        Security Information and Event Management
+    </p>
+
+    <hr>
+
+    {% if error %}
+
+    <div style="
+        background:#ffebee;
+        color:#c62828;
+        padding:10px;
+        border-radius:5px;
+        margin-bottom:20px;
+        text-align:center;
+    ">
+
+        {{ error }}
+
+    </div>
+
+    {% endif %}
+
+    <form method="POST" action="/login">
+
+        <label><b>Username</b></label>
+
+        <input
+            type="text"
+            name="username"
+            placeholder="Enter Username"
+            required
+            style="width:100%; padding:12px; margin-top:8px; margin-bottom:20px;">
+
+        <label><b>Password</b></label>
+
+        <input
+            type="password"
+            name="password"
+            placeholder="Enter Password"
+            required
+            style="width:100%; padding:12px; margin-top:8px; margin-bottom:20px;">
+
+        <button
+            type="submit"
+            style="
+                width:100%;
+                padding:12px;
+                background:#1e88e5;
+                color:white;
+                border:none;
+                border-radius:5px;
+                cursor:pointer;
+                font-size:16px;">
+
+            🔐 Login
+
+        </button>
+
+    </form>
+
+    <br>
+
+    <p style="text-align:center; color:gray;">
+
+        MiniSIEM v1.0
+
+    </p>
+
+</div>
+
+{% endblock %}

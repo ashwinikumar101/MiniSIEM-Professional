@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ==========================================
+     500 Error Page
+========================================== -->
+
+<div class="card fade-in" style="text-align:center; padding:60px;">
+
+    <h1 style="font-size:90px; color:#f39c12; margin-bottom:10px;">
+
+        500
+
+    </h1>
+
+    <h2>
+
+        ⚠️ Internal Server Error
+
+    </h2>
+
+    <br>
+
+    <p>
+
+        Something went wrong while processing your request.
+
+    </p>
+
+    <p>
+
+        Please try again later or contact the system administrator if the problem persists.
+
+    </p>
+
+    <br>
+
+    <a href="/">
+
+        <button class="btn-primary">
+
+            🏠 Return to Dashboard
+
+        </button>
+
+    </a>
+
+</div>
+
+{% endblock %}

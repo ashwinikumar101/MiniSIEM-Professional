@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ==========================================
+     Security Logs
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>📄 Security Logs</h2>
+
+    <p>
+
+        Search logs by <strong>IP Address</strong>,
+        <strong>Username</strong>,
+        <strong>Event</strong>,
+        <strong>Operating System</strong>,
+        or filter by <strong>Date</strong>.
+
+    </p>
+
+    <br>
+
+    <form method="GET" action="/logs">
+
+        <!-- Search -->
+
+        <input
+            type="text"
+            name="search"
+            placeholder="Search by IP, Username or Event..."
+            value="{{ search if search else '' }}">
+
+        <!-- Source -->
+
+        <select name="source">
+
+            <option value="">All Systems</option>
+
+            <option value="Windows"
+            {% if source=="Windows" %}selected{% endif %}>
+                🪟 Windows
+            </option>
+
+            <option value="Linux"
+            {% if source=="Linux" %}selected{% endif %}>
+                🐧 Linux
+            </option>
+
+        </select>
+
+        <!-- From Date -->
+
+        <input
+            type="date"
+            name="from_date"
+            value="{{ from_date if from_date else '' }}">
+
+        <!-- To Date -->
+
+        <input
+            type="date"
+            name="to_date"
+            value="{{ to_date if to_date else '' }}">
+
+        <button type="submit">
+
+            🔍 Search
+
+        </button>
+
+        <a href="/logs">
+
+            <button type="button">
+
+                Reset
+
+            </button>
+
+        </a>
+
+        <a href="/export/csv">
+
+            <button type="button">
+
+                📥 Export CSV
+
+            </button>
+
+        </a>
+
+        <a href="/export/pdf">
+
+            <button type="button">
+
+                📄 Export PDF
+
+            </button>
+
+        </a>
+
+    </form>
+
+</div>
+
+<!-- ==========================================
+     Logs Table
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>📋 Latest Security Logs</h2>
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Timestamp</th>
+
+                    <th>Event</th>
+
+                    <th>User</th>
+
+                    <th>IP Address</th>
+
+                    <th>Source</th>
+
+                    <th>Hostname</th>
+
+                    <th>Severity</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="logs_table">
+
+            {% if logs %}
+
+                {% for log in logs %}
+
+                <tr>
+
+                    <td>{{ log["id"] }}</td>
+
+                    <td>{{ log["timestamp"] }}</td>
+
+                    <td>{{ log["event"] }}</td>
+
+                    <td>{{ log["username"] }}</td>
+
+                    <td>{{ log["ip"] }}</td>
+
+                    <td>{{ log["source"] }}</td>
+
+                    <td>{{ log["hostname"] }}</td>
+
+                    <td>
+
+                        {% if log["severity"] == "HIGH" %}
+
+                            <span class="badge badge-danger">
+
+                                HIGH
+
+                            </span>
+
+                        {% elif log["severity"] == "MEDIUM" %}
+
+                            <span class="badge badge-warning">
+
+                                MEDIUM
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge badge-success">
+
+                                LOW
+
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            {% else %}
+
+                <tr>
+
+                    <td colspan="8">
+
+                        No matching logs found.
+
+                    </td>
+
+                </tr>
+
+            {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     Information
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>📘 Log Information</h2>
+
+    <p>
+
+        This page displays Windows and Linux security logs collected by
+        MiniSIEM.
+
+    </p>
+
+    <br>
+
+    <p>
+
+        Use the search box and filters above to quickly locate
+        login attempts, suspicious activities, IP addresses,
+        usernames and operating systems.
+
+    </p>
+
+</div>
+
+<!-- ==========================================
+     Auto Refresh Logs
+========================================== -->
+
+<script>
+
+async function refreshLogs(){
+
+    try{
+
+        const response = await fetch("/api/logs" + window.location.search);
+        const data = await response.json();
+
+        let table = document.getElementById("logs_table");
+
+        table.innerHTML = "";
+
+        if(data.logs.length === 0){
+
+            table.innerHTML = `
+
+                <tr>
+
+                    <td colspan="8">
+
+                        No Logs Found
+
+                    </td>
+
+                </tr>
+
+            `;
+
+            return;
+
+        }
+
+        data.logs.forEach(function(log){
+
+            let badge = "";
+
+            if(log.severity === "HIGH"){
+
+                badge = '<span class="badge badge-danger">HIGH</span>';
+
+            }
+
+            else if(log.severity === "MEDIUM"){
+
+                badge = '<span class="badge badge-warning">MEDIUM</span>';
+
+            }
+
+            else{
+
+                badge = '<span class="badge badge-success">LOW</span>';
+
+            }
+
+            table.innerHTML += `
+
+                <tr>
+
+                    <td>${log.id}</td>
+
+                    <td>${log.timestamp}</td>
+
+                    <td>${log.event}</td>
+
+                    <td>${log.username}</td>
+
+                    <td>${log.ip}</td>
+
+                    <td>${log.source}</td>
+
+                    <td>${log.hostname}</td>
+
+                    <td>${badge}</td>
+
+                </tr>
+
+            `;
+
+        });
+
+    }
+
+    catch(error){
+
+        console.error("Logs refresh failed:", error);
+
+    }
+
+}
+
+// -----------------------------------------
+// Auto Refresh Only When No Search Is Active
+// -----------------------------------------
+const urlParams = new URLSearchParams(window.location.search);
+
+const hasFilters =
+    urlParams.get("search") ||
+    urlParams.get("source") ||
+    urlParams.get("from_date") ||
+    urlParams.get("to_date");
+
+// Only refresh when no search/filter is active
+if(!hasFilters){
+
+    refreshLogs();
+
+    setInterval(refreshLogs,5000);
+
+}
+
+</script>
+
+{% endblock %}

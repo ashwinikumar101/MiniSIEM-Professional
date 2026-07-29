@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ==========================================
+     Dashboard Summary
+========================================== -->
+
+<div class="summary">
+
+    <div class="summary-card logs fade-in">
+
+        <h2>📄 Total Logs</h2>
+
+        <h1 id="total_logs">{{ total_logs }}</h1>
+
+    </div>
+
+    <div class="summary-card alerts fade-in">
+
+        <h2>🚨 Total Alerts</h2>
+
+        <h1 id="total_alerts">{{ total_alerts }}</h1>
+
+    </div>
+
+    <div class="summary-card windows fade-in">
+
+        <h2>🪟 Windows Logs</h2>
+
+        <h1 id="windows_logs">{{ windows_logs }}</h1>
+
+    </div>
+
+    <div class="summary-card linux fade-in">
+
+        <h2>🐧 Linux Logs</h2>
+
+        <h1 id="linux_logs">{{ linux_logs }}</h1>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     Latest Alert
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>🚨 Latest Security Alert</h2>
+
+    <div id="latest_alert">
+
+    {% if latest_alert %}
+
+        <p>
+
+            <span class="badge badge-danger">
+
+                {{ latest_alert["severity"] }}
+
+            </span>
+
+        </p>
+
+        <br>
+
+        <p>
+
+            <strong>Attack Type:</strong>
+
+            {{ latest_alert["alert_type"] }}
+
+        </p>
+
+        <p>
+
+            <strong>Attacker IP:</strong>
+
+            {{ latest_alert["ip"] }}
+
+        </p>
+
+        <p>
+
+            <strong>Recommendation:</strong>
+
+            {{ latest_alert["recommendation"] }}
+
+        </p>
+
+    {% else %}
+
+        <span class="badge badge-success">
+
+            No Active Alerts
+
+        </span>
+
+    {% endif %}
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     Collector Status
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>🖥️ Collector Status</h2>
+
+    <table>
+
+        <tbody>
+
+            <tr>
+
+                <th>Status</th>
+
+                <td id="collector_status">Loading...</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Database</th>
+
+                <td id="collector_database">Loading...</td>
+
+            </tr>
+
+            <tr>
+
+                <th>State File</th>
+
+                <td id="collector_state">Loading...</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Last Scan</th>
+
+                <td id="collector_scan">Loading...</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Uptime</th>
+
+                <td id="collector_uptime">Loading...</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Events Processed</th>
+
+                <td id="collector_events">0</td>
+
+            </tr>
+
+            <tr>
+
+                <th>Events / Second</th>
+
+                <td id="collector_eps">0</td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<!-- ==========================================
+     Recent Logs
+========================================== -->
+
+<div class="card fade-in">
+
+    <h2>📄 Recent Logs</h2>
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Timestamp</th>
+
+                    <th>Event</th>
+
+                    <th>User</th>
+
+                    <th>IP Address</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="logs_table">
+
+            {% for log in logs %}
+
+                <tr>
+
+                    <td>{{ log["id"] }}</td>
+
+                    <td>{{ log["timestamp"] }}</td>
+
+                    <td>{{ log["event"] }}</td>
+
+                    <td>{{ log["username"] }}</td>
+
+                    <td>{{ log["ip"] }}</td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     Dashboard Refresh Script
+========================================== -->
+
+<script>
+
+async function refreshDashboard(){
+
+    try{
+
+        const response = await fetch("/api/dashboard");
+
+        const data = await response.json();
+
+        document.getElementById("total_logs").innerText = data.total_logs;
+
+        document.getElementById("total_alerts").innerText = data.total_alerts;
+
+        document.getElementById("windows_logs").innerText = data.windows_logs;
+
+        document.getElementById("linux_logs").innerText = data.linux_logs;
+
+        let latest = document.getElementById("latest_alert");
+
+        if(data.latest_alert){
+
+            latest.innerHTML = `
+
+                <p>
+
+                    <span class="badge badge-danger">
+
+                        ${data.latest_alert.severity}
+
+                    </span>
+
+                </p>
+
+                <br>
+
+                <p><strong>Attack Type:</strong> ${data.latest_alert.alert_type}</p>
+
+                <p><strong>Attacker IP:</strong> ${data.latest_alert.ip}</p>
+
+                <p><strong>Recommendation:</strong> ${data.latest_alert.recommendation}</p>
+
+            `;
+
+        }
+
+        else{
+
+            latest.innerHTML = `
+
+                <span class="badge badge-success">
+
+                    No Active Alerts
+
+                </span>
+
+            `;
+
+        }
+
+        const collectorResponse = await fetch("/api/collector/status");
+
+        const collector = await collectorResponse.json();
+
+        document.getElementById("collector_status").innerText = collector.collector;
+
+        document.getElementById("collector_database").innerText = collector.database;
+
+        document.getElementById("collector_state").innerText = collector.state_file;
+
+        document.getElementById("collector_scan").innerText = collector.last_scan;
+
+        document.getElementById("collector_uptime").innerText = collector.uptime;
+
+        document.getElementById("collector_events").innerText = collector.events_processed;
+
+        document.getElementById("collector_eps").innerText = collector.events_per_second;
+
+        let table = document.getElementById("logs_table");
+
+        table.innerHTML = "";
+
+        data.logs.forEach(function(log){
+
+            table.innerHTML += `
+
+                <tr>
+
+                    <td>${log.id}</td>
+
+                    <td>${log.timestamp}</td>
+
+                    <td>${log.event}</td>
+
+                    <td>${log.username}</td>
+
+                    <td>${log.ip}</td>
+
+                </tr>
+
+            `;
+
+        });
+
+    }
+
+    catch(error){
+
+        console.error("Dashboard refresh failed:", error);
+
+    }
+
+}
+
+refreshDashboard();
+
+setInterval(refreshDashboard,5000);
+
+</script>
+
+{% endblock %}
