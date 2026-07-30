@@ -1,0 +1,35 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+.env
+
+# Git
+.git
+.gitignore
+
+# VS Code
+.vscode/
+
+# Docker
+Dockerfile
+
+# Logs
+logs/
+*.log
+
+# Reports
+reports/
+
+# Exports
+exports/
+
+# Python cache
+.pytest_cache/
+
+# Operating System
+Thumbs.db
+Desktop.ini
