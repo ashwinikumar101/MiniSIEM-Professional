@@ -1,4 +1,6 @@
+import os
 import sqlite3
+import psycopg2
 from datetime import datetime
 import bcrypt
 
@@ -6,9 +8,16 @@ import bcrypt
 # MiniSIEM Database Initialization
 # ==========================================
 
-DATABASE = "database/siem.db"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-conn = sqlite3.connect(DATABASE)
+if DATABASE_URL:
+    print("🐘 Using PostgreSQL Database...")
+    conn = psycopg2.connect(DATABASE_URL)
+else:
+    print("📁 Using SQLite Database...")
+    DATABASE = "database/siem.db"
+    conn = sqlite3.connect(DATABASE)
+
 cursor = conn.cursor()
 
 # ==========================================
