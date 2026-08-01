@@ -1,15 +1,22 @@
-import sqlite3
+from db import get_connection
+import psycopg2.extras
 
 # ==========================================
 # MINI SIEM ANALYZER
 # ==========================================
 
-conn = sqlite3.connect("database/siem.db")
-cursor = conn.cursor()
+conn = get_connection()
 
+cursor = conn.cursor(
+    cursor_factory=psycopg2.extras.RealDictCursor
+)
+
+# ==========================================
 # Find IPs with failed login attempts
+# ==========================================
+
 cursor.execute("""
-SELECT ip, COUNT(*) as failed_attempts
+SELECT ip, COUNT(*) AS failed_attempts
 FROM logs
 WHERE event='LOGIN_FAILED'
 GROUP BY ip
@@ -23,7 +30,10 @@ print("=" * 60)
 
 attack_found = False
 
-for ip, attempts in results:
+for row in results:
+
+    ip = row["ip"]
+    attempts = row["failed_attempts"]
 
     print(f"Checking IP : {ip}")
     print(f"Failed Attempts : {attempts}")
@@ -33,14 +43,20 @@ for ip, attempts in results:
 
         attack_found = True
 
+        # ==========================================
         # Check whether the alert already exists
+        # ==========================================
+
         cursor.execute("""
         SELECT COUNT(*)
         FROM alerts
-        WHERE alert_type=? AND ip=?
-        """, ("Brute Force Attack", ip))
+        WHERE alert_type=%s AND ip=%s
+        """, (
+            "Brute Force Attack",
+            ip
+        ))
 
-        exists = cursor.fetchone()[0]
+        exists = cursor.fetchone()["count"]
 
         if exists == 0:
 
@@ -53,7 +69,7 @@ for ip, attempts in results:
                 severity,
                 recommendation
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
             """, (
                 "Brute Force Attack",
                 ip,
@@ -69,13 +85,17 @@ for ip, attempts in results:
             print()
 
         else:
+
             print("Alert already exists.")
             print()
 
 if not attack_found:
+
     print("No suspicious activity detected.")
 
 conn.commit()
+
+cursor.close()
 conn.close()
 
 print("=" * 60)

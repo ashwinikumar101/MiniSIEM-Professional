@@ -9,7 +9,8 @@ from flask import (
     jsonify
 )
 
-import sqlite3
+from db import get_connection
+import psycopg2.extras
 import csv
 import os
 import bcrypt
@@ -40,9 +41,16 @@ app.secret_key = secrets.token_hex(32)
 # ------------------------------------------
 # Database Connection
 # ------------------------------------------
+
 def get_db_connection():
-    conn = sqlite3.connect("database/siem.db")
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
+
+    try:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor.close()
+    except Exception:
+        pass
+
     return conn
 # ==========================================
 # Role Checker
@@ -74,11 +82,16 @@ def login():
 
         conn = get_db_connection()
 
-        user = conn.execute(
-            "SELECT * FROM users WHERE username=?",
-            (username,)
-        ).fetchone()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
+        cursor.execute(
+            "SELECT * FROM users WHERE username = %s",
+            (username,)
+        )
+
+        user = cursor.fetchone()
+
+        cursor.close()
         conn.close()
 
         if user:
@@ -129,77 +142,86 @@ def dashboard():
         return response
 
     conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     # --------------------------------------
     # Total Logs
     # --------------------------------------
 
-    total_logs = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
-    """).fetchone()[0]
+    """)
+    total_logs = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Windows Logs
     # --------------------------------------
 
-    windows_logs = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
         WHERE source = 'Windows'
-    """).fetchone()[0]
+    """)
+    windows_logs = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Linux Logs
     # --------------------------------------
 
-    linux_logs = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
         WHERE source = 'Linux'
-    """).fetchone()[0]
+    """)
+    linux_logs = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Total Alerts
     # --------------------------------------
 
-    total_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM alerts
-    """).fetchone()[0]
+    """)
+    total_alerts = cursor.fetchone()["count"]
 
     # --------------------------------------
     # High Severity Alerts
     # --------------------------------------
 
-    high_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM alerts
         WHERE severity = 'HIGH'
-    """).fetchone()[0]
+    """)
+    high_alerts = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Latest Alert
     # --------------------------------------
 
-    latest_alert = conn.execute("""
+    cursor.execute("""
         SELECT *
         FROM alerts
         ORDER BY id DESC
         LIMIT 1
-    """).fetchone()
+    """)
+    latest_alert = cursor.fetchone()
 
     # --------------------------------------
     # Latest 10 Logs
     # --------------------------------------
 
-    logs = conn.execute("""
+    cursor.execute("""
         SELECT *
         FROM logs
         ORDER BY id DESC
         LIMIT 10
-    """).fetchall()
+    """)
+    logs = cursor.fetchall()
 
+    cursor.close()
     conn.close()
 
     return render_template(
@@ -230,6 +252,7 @@ def logs():
         return response
 
     conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     # --------------------------------------
     # Get Search Values
@@ -256,9 +279,9 @@ def logs():
 
         query += """
             AND (
-                username LIKE ?
-                OR event LIKE ?
-                OR ip LIKE ?
+                username ILIKE %s
+                OR event ILIKE %s
+                OR ip ILIKE %s
             )
         """
 
@@ -274,7 +297,7 @@ def logs():
 
     if source:
 
-        query += " AND source=?"
+        query += " AND source = %s"
 
         params.append(source)
 
@@ -284,7 +307,7 @@ def logs():
 
     if from_date:
 
-        query += " AND DATE(timestamp) >= ?"
+        query += " AND DATE(timestamp) >= %s"
 
         params.append(from_date)
 
@@ -294,7 +317,7 @@ def logs():
 
     if to_date:
 
-        query += " AND DATE(timestamp) <= ?"
+        query += " AND DATE(timestamp) <= %s"
 
         params.append(to_date)
 
@@ -304,8 +327,11 @@ def logs():
 
     query += " ORDER BY id DESC"
 
-    logs = conn.execute(query, params).fetchall()
+    cursor.execute(query, tuple(params))
 
+    logs = cursor.fetchall()
+
+    cursor.close()
     conn.close()
 
     return render_template(
@@ -323,7 +349,6 @@ def logs():
         to_date=to_date
 
     )
-
 
 # ==========================================
 # Alerts Page
@@ -343,12 +368,17 @@ def alerts():
 
     conn = get_db_connection()
 
-    alerts = conn.execute("""
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cursor.execute("""
         SELECT *
         FROM alerts
         ORDER BY id DESC
-    """).fetchall()
+    """)
 
+    alerts = cursor.fetchall()
+
+    cursor.close()
     conn.close()
 
     return render_template(
@@ -373,44 +403,49 @@ def analytics():
         return response
 
     conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     # --------------------------------------
     # Login Statistics
     # --------------------------------------
 
-    login_success = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
         WHERE event='LOGIN_SUCCESS'
-    """).fetchone()[0]
+    """)
+    login_success = cursor.fetchone()["count"]
 
-    login_failed = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
         WHERE event='LOGIN_FAILED'
-    """).fetchone()[0]
+    """)
+    login_failed = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Windows & Linux Events
     # --------------------------------------
 
-    windows_events = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
         WHERE source='Windows'
-    """).fetchone()[0]
+    """)
+    windows_events = cursor.fetchone()["count"]
 
-    linux_events = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
         WHERE source='Linux'
-    """).fetchone()[0]
+    """)
+    linux_events = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Top 5 Attacker IPs
     # --------------------------------------
 
-    top_ips = conn.execute("""
+    cursor.execute("""
         SELECT ip,
                COUNT(*) AS attempts
         FROM logs
@@ -418,55 +453,65 @@ def analytics():
         GROUP BY ip
         ORDER BY attempts DESC
         LIMIT 5
-    """).fetchall()
+    """)
+
+    top_ips = cursor.fetchall()
 
     # --------------------------------------
     # Alert Severity
     # --------------------------------------
 
-    high_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM alerts
         WHERE severity='HIGH'
-    """).fetchone()[0]
+    """)
+    high_alerts = cursor.fetchone()["count"]
 
-    medium_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM alerts
         WHERE severity='MEDIUM'
-    """).fetchone()[0]
+    """)
+    medium_alerts = cursor.fetchone()["count"]
 
-    low_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM alerts
         WHERE severity='LOW'
-    """).fetchone()[0]
+    """)
+    low_alerts = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Top 5 Targeted Users
     # --------------------------------------
 
-    top_users = conn.execute("""
+    cursor.execute("""
         SELECT username,
                COUNT(*) AS attempts
         FROM logs
         GROUP BY username
         ORDER BY attempts DESC
         LIMIT 5
-    """).fetchall()
+    """)
+
+    top_users = cursor.fetchall()
 
     # --------------------------------------
     # Login Activity Timeline
     # --------------------------------------
 
-    timeline = conn.execute("""
-        SELECT substr(timestamp,12,2) AS hour,
+    cursor.execute("""
+        SELECT EXTRACT(HOUR FROM timestamp) AS hour,
                COUNT(*) AS total
         FROM logs
         GROUP BY hour
         ORDER BY hour
-    """).fetchall()
+    """)
 
+    timeline = cursor.fetchall()
+
+    cursor.close()
     conn.close()
 
     return render_template(
@@ -526,65 +571,69 @@ def dashboard_api():
         return response
 
     conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     # --------------------------------------
     # Total Logs
     # --------------------------------------
 
-    total_logs = conn.execute(
-        "SELECT COUNT(*) FROM logs"
-    ).fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM logs")
+    total_logs = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Windows Logs
     # --------------------------------------
 
-    windows_logs = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
         WHERE source='Windows'
-    """).fetchone()[0]
+    """)
+    windows_logs = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Linux Logs
     # --------------------------------------
 
-    linux_logs = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
         WHERE source='Linux'
-    """).fetchone()[0]
+    """)
+    linux_logs = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Total Alerts
     # --------------------------------------
 
-    total_alerts = conn.execute(
-        "SELECT COUNT(*) FROM alerts"
-    ).fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM alerts")
+    total_alerts = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Latest Alert
     # --------------------------------------
 
-    latest_alert = conn.execute("""
+    cursor.execute("""
         SELECT *
         FROM alerts
         ORDER BY id DESC
         LIMIT 1
-    """).fetchone()
+    """)
+    latest_alert = cursor.fetchone()
 
     # --------------------------------------
     # Latest Logs
     # --------------------------------------
 
-    logs = conn.execute("""
+    cursor.execute("""
         SELECT *
         FROM logs
         ORDER BY id DESC
         LIMIT 10
-    """).fetchall()
+    """)
+    logs = cursor.fetchall()
 
+    cursor.close()
     conn.close()
 
     return {
@@ -597,9 +646,9 @@ def dashboard_api():
 
         "total_alerts": total_alerts,
 
-        "latest_alert": dict(latest_alert) if latest_alert else None,
+        "latest_alert": latest_alert if latest_alert else None,
 
-        "logs": [dict(log) for log in logs]
+        "logs": logs
 
     }
 
@@ -621,16 +670,21 @@ def alerts_api():
 
     conn = get_db_connection()
 
-    alerts = conn.execute("""
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cursor.execute("""
         SELECT *
         FROM alerts
         ORDER BY id DESC
-    """).fetchall()
+    """)
 
+    alerts = cursor.fetchall()
+
+    cursor.close()
     conn.close()
 
     return {
-        "alerts": [dict(alert) for alert in alerts]
+        "alerts": alerts
     }
 
 # ==========================================
@@ -651,16 +705,15 @@ def logs_api():
 
     conn = get_db_connection()
 
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
     # --------------------------------------
     # Get Filters
     # --------------------------------------
 
     search = request.args.get("search", "").strip()
-
     source = request.args.get("source", "").strip()
-
     from_date = request.args.get("from_date", "").strip()
-
     to_date = request.args.get("to_date", "").strip()
 
     query = "SELECT * FROM logs WHERE 1=1"
@@ -675,9 +728,9 @@ def logs_api():
 
         query += """
             AND (
-                ip LIKE ?
-                OR username LIKE ?
-                OR event LIKE ?
+                ip ILIKE %s
+                OR username ILIKE %s
+                OR event ILIKE %s
             )
         """
 
@@ -691,7 +744,7 @@ def logs_api():
 
     if source:
 
-        query += " AND source = ?"
+        query += " AND source = %s"
 
         params.append(source)
 
@@ -701,25 +754,28 @@ def logs_api():
 
     if from_date:
 
-        query += " AND DATE(timestamp) >= ?"
+        query += " AND DATE(timestamp) >= %s"
 
         params.append(from_date)
 
     if to_date:
 
-        query += " AND DATE(timestamp) <= ?"
+        query += " AND DATE(timestamp) <= %s"
 
         params.append(to_date)
 
     query += " ORDER BY id DESC LIMIT 100"
 
-    logs = conn.execute(query, params).fetchall()
+    cursor.execute(query, tuple(params))
 
+    logs = cursor.fetchall()
+
+    cursor.close()
     conn.close()
 
     return jsonify({
 
-        "logs": [dict(log) for log in logs]
+        "logs": logs
 
     })
 
@@ -740,92 +796,104 @@ def analytics_api():
         return response
 
     conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     # --------------------------------------
     # Dashboard Statistics
     # --------------------------------------
 
-    total_logs = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
-    """).fetchone()[0]
+    """)
+    total_logs = cursor.fetchone()["count"]
 
-    total_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM alerts
-    """).fetchone()[0]
+    """)
+    total_alerts = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Login Statistics
     # --------------------------------------
 
-    login_success = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
         WHERE event='LOGIN_SUCCESS'
-    """).fetchone()[0]
+    """)
+    login_success = cursor.fetchone()["count"]
 
-    login_failed = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
         WHERE event='LOGIN_FAILED'
-    """).fetchone()[0]
+    """)
+    login_failed = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Windows & Linux Statistics
     # --------------------------------------
 
-    windows_events = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
         WHERE source='Windows'
-    """).fetchone()[0]
+    """)
+    windows_events = cursor.fetchone()["count"]
 
-    linux_events = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM logs
         WHERE source='Linux'
-    """).fetchone()[0]
+    """)
+    linux_events = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Alert Severity
     # --------------------------------------
 
-    high_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM alerts
         WHERE severity='HIGH'
-    """).fetchone()[0]
+    """)
+    high_alerts = cursor.fetchone()["count"]
 
-    medium_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM alerts
         WHERE severity='MEDIUM'
-    """).fetchone()[0]
+    """)
+    medium_alerts = cursor.fetchone()["count"]
 
-    low_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*)
         FROM alerts
         WHERE severity='LOW'
-    """).fetchone()[0]
+    """)
+    low_alerts = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Event Statistics
     # --------------------------------------
 
-    event_stats = conn.execute("""
+    cursor.execute("""
         SELECT event,
                COUNT(*) AS count
         FROM logs
         GROUP BY event
         ORDER BY count DESC
-    """).fetchall()
+    """)
+
+    event_stats = cursor.fetchall()
 
     # --------------------------------------
     # Top Attacker IPs
     # --------------------------------------
 
-    top_ips = conn.execute("""
+    cursor.execute("""
         SELECT ip,
                COUNT(*) AS attempts
         FROM logs
@@ -833,33 +901,40 @@ def analytics_api():
         GROUP BY ip
         ORDER BY attempts DESC
         LIMIT 5
-    """).fetchall()
+    """)
+
+    top_ips = cursor.fetchall()
 
     # --------------------------------------
     # Top Users
     # --------------------------------------
 
-    top_users = conn.execute("""
+    cursor.execute("""
         SELECT username,
                COUNT(*) AS attempts
         FROM logs
         GROUP BY username
         ORDER BY attempts DESC
         LIMIT 5
-    """).fetchall()
+    """)
+
+    top_users = cursor.fetchall()
 
     # --------------------------------------
     # Login Timeline
     # --------------------------------------
 
-    timeline = conn.execute("""
-        SELECT substr(timestamp,12,2) AS hour,
+    cursor.execute("""
+        SELECT EXTRACT(HOUR FROM timestamp) AS hour,
                COUNT(*) AS total
         FROM logs
         GROUP BY hour
         ORDER BY hour
-    """).fetchall()
+    """)
 
+    timeline = cursor.fetchall()
+
+    cursor.close()
     conn.close()
 
     return jsonify({
@@ -882,13 +957,13 @@ def analytics_api():
 
         "low_alerts": low_alerts,
 
-        "event_stats": [dict(event) for event in event_stats],
+        "event_stats": event_stats,
 
-        "top_ips": [dict(ip) for ip in top_ips],
+        "top_ips": top_ips,
 
-        "top_users": [dict(user) for user in top_users],
+        "top_users": top_users,
 
-        "timeline": [dict(item) for item in timeline]
+        "timeline": timeline
 
     })
 
@@ -945,7 +1020,8 @@ def export_csv():
         return response
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     # --------------------------------------
     # Fetch All Logs
@@ -967,6 +1043,7 @@ def export_csv():
 
     logs = cursor.fetchall()
 
+    cursor.close()
     conn.close()
 
     # --------------------------------------
@@ -1040,59 +1117,70 @@ def export_pdf():
 
     conn = get_db_connection()
 
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
     # --------------------------------------
     # System Summary
     # --------------------------------------
 
-    total_logs = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*) FROM logs
-    """).fetchone()[0]
+    """)
+    total_logs = cursor.fetchone()["count"]
 
-    windows_logs = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*) FROM logs
         WHERE source='Windows'
-    """).fetchone()[0]
+    """)
+    windows_logs = cursor.fetchone()["count"]
 
-    linux_logs = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*) FROM logs
         WHERE source='Linux'
-    """).fetchone()[0]
+    """)
+    linux_logs = cursor.fetchone()["count"]
 
-    total_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*) FROM alerts
-    """).fetchone()[0]
+    """)
+    total_alerts = cursor.fetchone()["count"]
 
-    high_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*) FROM alerts
         WHERE severity='HIGH'
-    """).fetchone()[0]
+    """)
+    high_alerts = cursor.fetchone()["count"]
 
-    medium_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*) FROM alerts
         WHERE severity='MEDIUM'
-    """).fetchone()[0]
+    """)
+    medium_alerts = cursor.fetchone()["count"]
 
-    low_alerts = conn.execute("""
+    cursor.execute("""
         SELECT COUNT(*) FROM alerts
         WHERE severity='LOW'
-    """).fetchone()[0]
+    """)
+    low_alerts = cursor.fetchone()["count"]
 
     # --------------------------------------
     # Latest Alert
     # --------------------------------------
 
-    latest_alert = conn.execute("""
+    cursor.execute("""
         SELECT *
         FROM alerts
         ORDER BY id DESC
         LIMIT 1
-    """).fetchone()
+    """)
+
+    latest_alert = cursor.fetchone()
 
     # --------------------------------------
     # Top 5 Attacker IPs
     # --------------------------------------
 
-    top_ips = conn.execute("""
+    cursor.execute("""
         SELECT ip,
                COUNT(*) AS attempts
         FROM logs
@@ -1100,8 +1188,11 @@ def export_pdf():
         GROUP BY ip
         ORDER BY attempts DESC
         LIMIT 5
-    """).fetchall()
+    """)
 
+    top_ips = cursor.fetchall()
+
+    cursor.close()
     conn.close()
 
     # --------------------------------------

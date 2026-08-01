@@ -7,7 +7,8 @@ Version : 2.0
 =========================================================
 """
 
-import sqlite3
+from db import get_connection
+import psycopg2.extras
 import os
 import socket
 
@@ -15,7 +16,6 @@ import socket
 # Configuration
 # =========================================================
 
-DATABASE = "database/siem.db"
 LOG_FILE = "logs/sample.log"
 POSITION_FILE = "logs/last_position.txt"
 
@@ -29,8 +29,11 @@ HOSTNAME = socket.gethostname()
 # Database Connection
 # =========================================================
 
-conn = sqlite3.connect(DATABASE)
-cursor = conn.cursor()
+conn = get_connection()
+
+cursor = conn.cursor(
+    cursor_factory=psycopg2.extras.RealDictCursor
+)
 
 # =========================================================
 # Create Position File
@@ -122,13 +125,13 @@ with open(LOG_FILE, "r") as logfile:
 
                 WHERE
 
-                    timestamp=?
+                    timestamp=%s
 
-                    AND event=?
+                    AND event=%s
 
-                    AND username=?
+                    AND username=%s
 
-                    AND ip=?
+                    AND ip=%s
 
             """, (
 
@@ -142,7 +145,7 @@ with open(LOG_FILE, "r") as logfile:
 
             ))
 
-            exists = cursor.fetchone()[0]
+            exists = cursor.fetchone()["count"]
 
             if exists:
 
@@ -175,7 +178,7 @@ with open(LOG_FILE, "r") as logfile:
 
                 )
 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
 
             """, (
 
@@ -201,7 +204,7 @@ with open(LOG_FILE, "r") as logfile:
 
             print("Skipped Invalid Log :", line)
 
-            print(error)
+            print(error)    
 
     # =====================================================
     # Save Current Position
